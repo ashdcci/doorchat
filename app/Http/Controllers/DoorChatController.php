@@ -62,7 +62,7 @@ class DoorchatController extends Controller
                     ),200);
             }
              //$path = 'http://'.$_SERVER['HTTP_HOST'].'/public/uploads/user_profile/'.rand(11111,99999).'.'.$request->file('profile_picture')->getClientOriginalExtension();
-           
+           $path = '';
         $user = User::where('user_token', '=', $request->only('token'))->first();
         if(!empty($user)){
                    
@@ -119,6 +119,7 @@ class DoorchatController extends Controller
                  return Response::json(array(
                     'error'=>false,
                     'content'=>'User Profile Updated',
+                    'user_image_url'=>$path,
                     'token'=>$request->input('token')
                     ),200);
                  
@@ -1156,6 +1157,8 @@ class DoorchatController extends Controller
                                                     ->where('id', $request->input('p_comment_id'))
                                                     ->increment('comment_count');
 
+
+
                                                     $u10 = DB::table('tbl_door')
                                                             ->where('id','=',$request->input('door_id'))
                                                             ->update(['last_active'=>date('Y-m-d H:i:s')]);
@@ -1174,7 +1177,7 @@ class DoorchatController extends Controller
                             }else{
                                 // first post
                                  
-                                    $res = DB::table('tbl_door_post_comment')->insertGetId([
+                                    $res11 = DB::table('tbl_door_post_comment')->insertGetId([
                                         'door_id'=>$request->input('door_id'),
                                         'commenter_id'=>$user->id,
                                         'post_comment_desc'=>$comment_desc,
@@ -1186,6 +1189,7 @@ class DoorchatController extends Controller
                                     $u1 = DB::table('tbl_door_post')
                                                     ->where('door_id', $request->input('door_id'))
                                                     ->where('user_id', $user->id)
+                                                    ->where('id', $request->input('post_id'))
                                                     ->increment('comment_count');
 
                                                     $u10 = DB::table('tbl_door')
@@ -1561,6 +1565,17 @@ class DoorchatController extends Controller
                         // means get inner comment form particular comments
                              $res = DB::table('tbl_door_post_comment as a')
                                 ->selectRaw('distinct a.id,a.parent_comment_id,a.post_comment_desc,c.fullname,c.profile_picture,a.comment_like_count,a.comment_count,
+                                   case  when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>86400  then
+                                        COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/86400,""),"d"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>3600  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/3600,""),"h"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,0),"")>1  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,""),"m"),0)
+                                     else
+                                         COALESCE( concat(round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),""),"s"),0) 
+                                     end as created_time,
                                     case when e.id >0 then 1 else 0 end as is_like')
                                 ->join('tbl_door_post as b','a.post_id','=','b.id')
                                 ->join('tbl_user_register as c','a.commenter_id','=','c.id')
@@ -1583,6 +1598,17 @@ class DoorchatController extends Controller
                         // means get all parent comment
                         $res = DB::table('tbl_door_post_comment as a')
                                 ->selectRaw('distinct a.id,a.parent_comment_id,a.post_comment_desc,c.fullname,c.profile_picture,a.comment_like_count,a.comment_count,
+                                   case  when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>86400  then
+                                        COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/86400,""),"d"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>3600  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/3600,""),"h"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,0),"")>1  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,""),"m"),0)
+                                     else
+                                         COALESCE( concat(round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),""),"s"),0) 
+                                     end as created_time,
                                     case when e.id > 0 then 1 else 0 end as is_like')
                                 ->join('tbl_door_post as b','a.post_id','=','b.id')
                                 ->join('tbl_user_register as c','a.commenter_id','=','c.id')
@@ -1703,6 +1729,7 @@ class DoorchatController extends Controller
                     $myCreatedDoors = DB::table('tbl_door as a')
                                         ->selectRaw('a.id,a.door_title,a.door_image,a.door_total_member,
                                              case 
+
                                      when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.last_active ))/60,0),"")>60  then
                                          COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.last_active ))/3600,"")," Hours Ago"),0)
                                      else
@@ -2096,10 +2123,16 @@ public function fetch_door_single(Request $request){
 
                                     $res = DB::table('tbl_door_post as a')
                                             ->selectRaw('a.*,c.fullname,c.profile_picture,c.username, case 
-                                     when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,0),"")>60  then
-                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/3600,"")," Hours Ago"),0)
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>86400  then
+                                        COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/86400,""),"d"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>3600  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/3600,""),"h"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,0),"")>1  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,""),"m"),0)
                                      else
-                                         COALESCE( concat(round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,"")," Minutes Ago"),0) 
+                                         COALESCE( concat(round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),""),"s"),0) 
                                      end as created_time
                                      ,
                                      case when d.id >0 then 1 else 0 end as is_like
@@ -2125,10 +2158,16 @@ public function fetch_door_single(Request $request){
 
                                      $res = DB::table('tbl_door_post as a')
                                             ->selectRaw('a.*,c.fullname,c.profile_picture,c.username, case 
-                                     when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,0),"")>60  then
-                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/3600,"")," Hours Ago"),0)
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>86400  then
+                                        COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/86400,""),"d"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>3600  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/3600,""),"h"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,0),"")>1  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,""),"m"),0)
                                      else
-                                         COALESCE( concat(round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,"")," Minutes Ago"),0) 
+                                         COALESCE( concat(round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),""),"s"),0) 
                                      end as created_time,
                                      case when d.id >0 then 1 else 0 end as is_like')
                                             ->join('tbl_door as b','a.door_id','=','b.id')
