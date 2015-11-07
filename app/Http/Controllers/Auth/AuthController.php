@@ -174,7 +174,7 @@ class AuthController extends Controller {
                 ]);
                  $profile= DB::table('tbl_user_register')
                                               ->selectRaw('fullname,email,lat,lng,profile_picture,username,city,country,last_active_door')
-                                              ->where('id','=',Auth::user()->id)
+                                              ->where('user_token','=',$user_token)
                                               ->get();
                   return Response::json(array(
                     'error' => false,

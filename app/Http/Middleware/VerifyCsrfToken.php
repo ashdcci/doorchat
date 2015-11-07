@@ -14,10 +14,8 @@ class VerifyCsrfToken extends BaseVerifier
     // protected $except = [
     //     //
     // ];
-            public function handle ($request, Closure $next)
-         {
-            if ( !$request->is("v1/*"))
-            {
+            public function handle ($request, Closure $next){
+            if ( !$request->is("v1/*")){
                 return parent::handle($request, $next);
             }
              return $next($request);

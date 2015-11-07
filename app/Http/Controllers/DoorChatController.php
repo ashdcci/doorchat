@@ -31,7 +31,10 @@ class DoorchatController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-
+    // public function __construct()
+    // {
+    //   // date_default_timezone_set('UTC');
+    // }
 
     public function index()
     {
@@ -247,7 +250,8 @@ class DoorchatController extends Controller
                         'user_id'=>$user->id,
                         'door_lat'=>$request->input('door_lat'),
                         'door_lng'=>$request->input('door_lng'),
-                        'last_active'=>date('Y-m-d H:i:s')
+                        'last_active'=>date('Y-m-d H:i:s'),
+                        'created_at'=>date('Y-m-d H:i:s')
                         ]);
                   //  if($res>0){
                         return Response::json(array(
@@ -605,7 +609,8 @@ class DoorchatController extends Controller
                     $res = DB::table('tbl_door_report')->insertGetId([
                         'door_id'=>$request->input('door_id'),
                         'report_title'=>$report_title,
-                        'report_desc'=>$report_desc
+                        'report_desc'=>$report_desc,
+                        'created_at'=>date('Y-m-d H:i:s')
                         ]);
 
                   //  if($res>0){
@@ -662,7 +667,8 @@ class DoorchatController extends Controller
                     $res = DB::table('tbl_door_post')->insertGetId([
                         'door_id'=>$request->input('door_id'),
                         'user_id'=>$user->id,
-                        'post_desc'=>$post_desc
+                        'post_desc'=>$post_desc,
+                        'created_at'=>date('Y-m-d H:i:s')
                         ]);
 
                     $u10 = DB::table('tbl_door')
@@ -695,7 +701,8 @@ class DoorchatController extends Controller
                         'door_id'=>$request->input('door_id'),
                         'user_id'=>$user->id,
                         'post_image'=>$path,
-                        'post_desc'=>$post_desc
+                        'post_desc'=>$post_desc,
+                        'created_at'=>date('Y-m-d H:i:s')
                         ]);
                     $u10 = DB::table('tbl_door')
                             ->where('id','=',$request->input('door_id'))
@@ -989,7 +996,8 @@ class DoorchatController extends Controller
                                 $r1 = DB::table('tbl_door_post_likes')->insertGetId([
                                     'post_id'=>$request->input('id'),
                                     'liker_id'=>$user->id,
-                                    'door_id'=>$request->input('door_id')
+                                    'door_id'=>$request->input('door_id'),
+                                    'created_at'=>date('Y-m-d H:i:s')
                                     ]);
                                  // $u1 = DB::select(DB::raw('update tbl_door_post set like_count = like_count+1 where door_id = '.$request->input('door_id').' and 
                                  // user_id = '.$user->id.' and id = '.$request->input('id').' '));
@@ -1041,6 +1049,7 @@ class DoorchatController extends Controller
     // fetch door post
 
     public function fetch_door_post(Request $request){
+        
          $rules = [
         'token'=>'required',
         'door_id'=>'required'
@@ -1148,7 +1157,8 @@ class DoorchatController extends Controller
                                                         'commenter_id'=>$user->id,
                                                         'post_comment_desc'=>$comment_desc,
                                                         'post_id'=>$request->input('post_id'),
-                                                        'parent_comment_id'=>$request->input('p_comment_id')
+                                                        'parent_comment_id'=>$request->input('p_comment_id'),
+                                                        'created_at'=>date('Y-m-d H:i:s')
                                                     ]);
                                             // update comment_count to its parent id
                                             $u1 = DB::table('tbl_door_post_comment')
@@ -1182,7 +1192,8 @@ class DoorchatController extends Controller
                                         'commenter_id'=>$user->id,
                                         'post_comment_desc'=>$comment_desc,
                                         'post_id'=>$request->input('post_id'),
-                                        'parent_comment_id'=>'0'
+                                        'parent_comment_id'=>'0',
+                                        'created_at'=>date('Y-m-d H:i:s')
                                         ]);
 
                                     // update comment_count to original post here
@@ -1486,7 +1497,8 @@ class DoorchatController extends Controller
                                     'post_id'=>$request->input('post_id'),
                                     'comment_id'=>$request->input('id'),
                                     'liker_id'=>$user->id,
-                                    'door_id'=>$request->input('door_id')
+                                    'door_id'=>$request->input('door_id'),
+                                    'created_at'=>date('Y-m-d H:i:s')
                                     ]);
                                  // $u1 = DB::select(DB::raw('update tbl_door_post_comment set comment_like_count = comment_like_count+1 where door_id = '.$request->input('door_id').' and 
                                  // commenter_id = '.$user->id.' and post_id = '.$request->input('post_id').' and id = '.$request->input('id').' '));
@@ -1629,6 +1641,47 @@ class DoorchatController extends Controller
                                 ->where('id','=',$user->id)
                                 ->update(['last_active_door'=>$request->input('door_id')]);
                     }
+                    $i = 0;
+                    foreach($res as $val){
+                       // echo $val->id;
+                                    $i++;
+                                    // echo $val->comment_count;
+                                   if($val->comment_count >0){
+                                    $comm = DB::table('tbl_door_post_comment as a')
+                                            ->selectRaw('a.id,a.comment_count,a.comment_like_count,a.post_comment_desc,b.fullname,b.profile_picture,b.username,
+                                                case 
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>86400  then
+                                        COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/86400,""),"d"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>3600  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/3600,""),"h"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,0),"")>1  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,""),"m"),0)
+                                     else
+                                         COALESCE( concat(round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),""),"s"),0) 
+                                     end as created_time,
+
+                                    case when e.id >0 then 1 else 0 end as is_like
+                                                ')
+                                            ->join('tbl_user_register as b','a.commenter_id','=','b.id')
+                                            ->leftJoin('tbl_door_post_comment_likes as e','a.id','=','e.comment_id')
+                                            ->where('a.door_id',$request->input('door_id'))
+                                            ->where('a.post_id',$request->input('post_id'))
+                                            ->where('a.parent_comment_id','=',$val->id)
+                                            ->orderBy('a.id','desc')
+                                            ->skip(0)->take(1)
+                                            ->get();
+                                            $val->last_comment = $comm;
+                                            
+                                          
+                                             
+                                  }else{
+                                    $val->last_comment = array();
+                                  }
+                                 
+
+                                }
 
                     return Response::json(array(
                         'error'=>false,
@@ -2105,15 +2158,7 @@ public function fetch_door_single(Request $request){
                                           }
 
                                     }
-                                // if($status=="OK"){
-                                //     $street  = $data->results[0]->address_components[0]->long_name;
-                                //     $colny  = $data->results[0]->address_components[1]->long_name;
-                                //     $city = $street  = $data->results[0]->address_components[2]->long_name;
-                                //     $code = $street  = $data->results[0]->address_components[5]->long_name;
-                                //     $address = $street.' '.$colny.' '.$city.' '.$code;
-                                // }else{
-                                //    $address =  $street = $colny = $city = $code = '';
-                                // }
+                               
             
                                 if($fetch->user_id==$user->id){
                                      // mydoor
@@ -2185,10 +2230,57 @@ public function fetch_door_single(Request $request){
                                 ->where('id','=',$user->id)
                                 ->update(['last_active_door'=>$request->input('door_id')]);
                                 }
+                               //print_r($res);
+                               $arr = $res;
+                               $i = 0;
+                              // print_r($arr);
+                                foreach($res as $val){
+                                    $i++;
+                                    // echo $val->comment_count;
+                                   if($val->comment_count >0){
+                                    $comm = DB::table('tbl_door_post_comment as a')
+                                            ->selectRaw('a.id,a.comment_count,a.comment_like_count,a.post_comment_desc,b.fullname,b.profile_picture,b.username,
+                                                case 
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>86400  then
+                                        COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/86400,""),"d"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),0),"")>3600  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/3600,""),"h"),0)
+
+                                    when COALESCE( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,0),"")>1  then
+                                         COALESCE(concat( round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at ))/60,""),"m"),0)
+                                     else
+                                         COALESCE( concat(round( TIME_TO_SEC(TIMEDIFF("'.date('Y-m-d H:i:s').'",a.created_at )),""),"s"),0) 
+                                     end as created_time,"'.date('Y-m-d H:i:s').'" as dt,
+
+                                     case when e.id >0 then 1 else 0 end as is_like
+                                                ')
+                                            ->join('tbl_user_register as b','a.commenter_id','=','b.id')
+                                            ->leftJoin('tbl_door_post_comment_likes as e','a.id','=','e.comment_id')
+                                            ->where('a.door_id',$request->input('door_id'))
+                                            ->where('a.post_id',$val->id)
+                                            ->where('a.parent_comment_id','=',0)
+                                            ->orderBy('a.id','desc')
+                                            ->skip(0)->take(1)
+                                            ->get();
+                                            
+
+                                            $val->last_comment = $comm;
+                                            
+                                          
+                                             
+                                  }else{
+                                    $val->last_comment = array();
+                                  }
+                                 
+
+                                }
+                                
+
                                 return Response::json(array(
                                     'error'=>false,
                                     'total_post'=>count($res),
-                                    'content'=>$res,
+                                    'content'=>$arr,
                                     'door_address'=>$address,
                                     'door_image'=>$fetch->door_image,
                                     'door_title'=>$fetch->door_title
@@ -2267,7 +2359,8 @@ public function connect_to_door(Request $request){
                             // insert into tbl_door_visited
                             $ins = DB::table('tbl_door_visited')->insertGetId([
                             'door_id'=>$request->input('door_id'),
-                            'visitor_id'=>$user->id
+                            'visitor_id'=>$user->id,
+                            'created_at'=>date('Y-m-d H:i:s')
                             ]);
 
                             // insert into tbl_door_member
@@ -2275,6 +2368,7 @@ public function connect_to_door(Request $request){
                             'door_id'=>$request->input('door_id'),
                             'member_id'=>$user->id,
                             'user_id'=>$user_id,
+                            'created_at'=>date('Y-m-d H:i:s')
                             ]);
 
                             $u10 = DB::table('tbl_door')

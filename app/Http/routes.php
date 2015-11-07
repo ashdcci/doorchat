@@ -50,12 +50,12 @@ Route::group(array('prefix'=>'v1'),function(){
 	Route::post('delete_door_post','DoorChatController@delete_door_post');
 	Route::post('update_door_post','DoorChatController@update_door_post');
 	Route::post('door_post_like','DoorChatController@door_post_like');
-	Route::post('fetch_door_post','DoorChatController@fetch_door_post');
+//	Route::post('fetch_door_post','DoorChatController@fetch_door_post');
 	// Route::get('fetch_door_post/{page}/', array(
 	//     'as'    => 'fetch_door_post',
 	//     'uses'  => 'DoorChatController@fetch_door_post'
 	// ));
-	//Route::post('fetch_door_post/{page}','DoorChatController@fetch_door_post');
+	Route::post('fetch_door_post/{page}','DoorChatController@fetch_door_post');
 
 	Route::post('add_door_post_comment','DoorChatController@add_door_post_comment');
 	Route::post('delete_door_post_comment','DoorChatController@delete_door_post_comment');
